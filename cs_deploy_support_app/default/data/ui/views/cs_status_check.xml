@@ -1,0 +1,62 @@
+<form>
+  <label>CS Status Check</label>
+  <fieldset submitButton="true">
+    <input type="text" token="cs_filter">
+      <label>CS Filter</label>
+    </input>
+    <input type="time" token="field1">
+      <label></label>
+      <default>
+        <earliest>-60m@m</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <table>
+        <title>CS Status</title>
+        <search>
+          <query>| rest splunk_server=local count=0 /services/saved/searches search="name=\"*- Rule\"" | eval actions=split(actions, ",") | foreach action.*.enabled [eval actions=if('&lt;&lt;FIELD&gt;&gt;'=1,mvappend(actions,NULL,replace("&lt;&lt;FIELD&gt;&gt;","action\.(.*?)\..*","\1")),actions)] | search title="$cs_filter$"
+| table title, action.notable, action.notable.param.verbose, action.nslookup.param.verbose, action.ping.param.verbose, actions, alert.digest_mode, alert.expires, alert.severity, alert.suppress, alert.suppress.fields, alert.suppress.period, cron_schedule, description, disabled, dispatch.earliest_time, dispatch.latest_time, dispatch.rt_backfill, eai:acl.app, search
+| lookup correlationsearches_lookup _key AS title
+| table title, eai:acl.app, actions, action.notable, alert.suppress, disabled,</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Saved search Log</title>
+      <table>
+        <search>
+          <query>index=_* savedsearch_name="$cs_filter$" sourcetype=scheduler
+| convert ctime(_time) as time
+| sort + _time
+| stats list(time), list(log_level), list(status), list(run_time), list(suppressed) by sid, savedsearch_name
+| fields - sid</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Audit Trail log</title>
+      <table>
+        <search>
+          <query>index=_* savedsearch_name="*$cs_filter$*" sourcetype=audittrail search_id='scheduler*
+| convert ctime(_time) as time
+| sort + _time
+| stats list(time), list(info), list(total_run_time),  list(scan_count), list(event_count), list(result_count) by search_id, savedsearch_name
+| fields - search_id</query>
+          <earliest>$field1.earliest$</earliest>
+          <latest>$field1.latest$</latest>
+        </search>
+      </table>
+    </panel>
+  </row>
+</form>

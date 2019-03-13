@@ -1,0 +1,7 @@
+Authentication.user,Authentication.dest,Authentication.EventCode,Authentication.src,description,RuleName
+user1,,,PC081,temp issue. until 20th march. INC00000111,cs_enoal
+test_user,,,,used for pentest,tstats_auth
+,,4771,,,tstats_auth
+N\A,,,,,tstats_auth
+*$*,,,,,tstats_auth
+unknown,,,,,tstats_auth

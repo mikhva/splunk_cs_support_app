@@ -1,0 +1,7 @@
+<nav search_view="search" color="#65A637">
+  <view name="prediciton_search"  default='true' />
+  <view name="cs_status_check" />  
+  <view name="search"/>
+  <view name="dashboards" />
+  
+</nav>

@@ -1,0 +1,106 @@
+<form>
+  <search id="base_search_cur_cs">
+    <query>`notable` 
+| search NOT `suppression` rule_name="$cur_cs$"
+| table _time,urgency,src,dest, dst,dvc, Account_Name, action, user
+| transpose 0 include_empty=false | transpose 0 header_field=column | fields - column
+</query>
+    <earliest>$time_tok.earliest$</earliest>
+    <latest>$time_tok.latest$</latest>
+  </search>
+  <search id="base_search_pred_cs">
+    <query>$pred_cs$</query>
+    <earliest>$time_tok.earliest$</earliest>
+    <latest>$time_tok.latest$</latest>
+  </search>
+  <label>CS Results Prediction</label>
+  <fieldset submitButton="true">
+    <input type="dropdown" token="cur_cs">
+      <label>Current alert</label>
+      <fieldForLabel>rule_name</fieldForLabel>
+      <fieldForValue>rule_name</fieldForValue>
+      <search>
+        <query>`notable` 
+| search NOT `suppression` 
+| dedup rule_name 
+| table rule_name
+| sort rule_name</query>
+        <earliest>-90d@d</earliest>
+        <latest>now</latest>
+      </search>
+    </input>
+    <input type="dropdown" token="pred_cs">
+      <label>Predicted alert</label>
+      <fieldForLabel>rule_title</fieldForLabel>
+      <fieldForValue>pred_search</fieldForValue>
+      <search>
+        <query>| inputlookup cs_pred_lp.csv</query>
+        <earliest>0</earliest>
+        <latest></latest>
+      </search>
+    </input>
+    <input type="time" token="time_tok">
+      <label></label>
+      <default>
+        <earliest>-30d@d</earliest>
+        <latest>now</latest>
+      </default>
+    </input>
+  </fieldset>
+  <row>
+    <panel>
+      <title>Total count for current alerts</title>
+      <single>
+        <search base="base_search_cur_cs">
+          <query>stats count</query>
+        </search>
+      </single>
+    </panel>
+    <panel>
+      <title>Total count for historical based alerts (prediction)</title>
+      <single>
+        <search base="base_search_pred_cs">
+          <query>stats count</query>
+        </search>
+      </single>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Time chart for current alerts</title>
+      <chart>
+        <search base="base_search_cur_cs">
+          <query>timechart count</query>
+        </search>
+        <option name="charting.chart">column</option>
+      </chart>
+    </panel>
+    <panel>
+      <title>Time chart for historical based alerts (prediction)</title>
+      <chart>
+        <search base="base_search_pred_cs">
+          <query>timechart count</query>
+        </search>
+        <option name="charting.chart">column</option>
+      </chart>
+    </panel>
+  </row>
+  <row>
+    <panel>
+      <title>Source data table for current alerts</title>
+      <table>
+        <search base="base_search_cur_cs">
+          <query/>
+        </search>
+      </table>
+    </panel>
+    <panel>
+      <title>Source data table for historical based alerts (prediction) - source table</title>
+      <table>
+        <search base="base_search_pred_cs">
+          <query/>
+        </search>
+      </table>
+    </panel>
+  </row>
+</form>
